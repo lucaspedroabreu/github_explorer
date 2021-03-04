@@ -9,23 +9,11 @@ import api from '../../services/api-client'
 import { Header, RepositoryInfo, Issues } from './styles'
 
 import logoImg from '../../assets/github-explorer_logo.svg'
+import { IRepository } from '../../types'
 
 interface RepositoryParams {
 	user: string
 	repository: string
-}
-
-interface Repository {
-	name: string
-	full_name: string
-	description: string
-	stargazers_count: number
-	forks_count: number
-	open_issues_count: number
-	owner: {
-		login: string
-		avatar_url: string
-	}
 }
 
 interface Issue {
@@ -38,7 +26,7 @@ interface Issue {
 }
 
 const Repository: React.FC = () => {
-	const [repository, setRepository] = useState<Repository | null>(null)
+	const [repository, setRepository] = useState<IRepository | null>(null)
 	const [issues, setIssues] = useState<Issue[]>([])
 
 	const { params } = useRouteMatch<RepositoryParams>()
@@ -53,7 +41,7 @@ const Repository: React.FC = () => {
 				setIssues(response.data)
 			}
 		)
-	}, [params.repository])
+	}, [params.repository, params.user])
 
 	return (
 		<>

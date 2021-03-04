@@ -6,22 +6,13 @@ import api from '../../services/api-client'
 import { Title, Form, Repositories, Error } from './styles'
 
 import svgLogo from '../../assets/github-explorer_logo.svg'
-
-interface Repository {
-	name: string
-	full_name: string
-	description: string
-	owner: {
-		login: string
-		avatar_url: string
-	}
-}
+import { IRepository } from '../../types'
 
 const Dashboard: React.FC = () => {
 	const [repoQuery, setQuery] = useState('')
 	const [inputError, setInputError] = useState('')
 
-	const [repositories, setRepositories] = useState<Repository[]>(() => {
+	const [repositories, setRepositories] = useState<IRepository[]>(() => {
 		const storedRepositories = localStorage.getItem(
 			'@GithubExplorer:repositories'
 		)
@@ -51,11 +42,17 @@ const Dashboard: React.FC = () => {
 		}
 
 		try {
-			const githubResponse = await api.get<Repository>(`repos/${repoQuery}`)
+			const githubResponse = await api.get<IRepository>(`repos/${repoQuery}`)
 
 			const repository = githubResponse.data
 
-			setRepositories([...repositories, repository])
+			setRepositories(previousRepositories => {
+				const notIncludingSearchedRepo = previousRepositories.filter(
+					repo => repo.id !== repository.id
+				)
+
+				return [...notIncludingSearchedRepo, repository]
+			})
 			setQuery('')
 			setInputError('')
 		} catch (err) {
@@ -83,23 +80,25 @@ const Dashboard: React.FC = () => {
 			{inputError && <Error>{inputError}</Error>}
 
 			<Repositories>
-				{repositories.map(repository => (
-					<Link
-						key={repository.full_name}
-						to={`/repository/${repository.owner.login}/${repository.name}`}
-					>
-						<img
-							src={repository.owner.avatar_url}
-							alt={repository.owner.login}
-						/>
-						<div>
-							<strong>{repository.full_name}</strong>
-							<p>{repository.description}</p>
-						</div>
+				{repositories.map(
+					({
+						id,
+						full_name,
+						owner: { login, avatar_url },
+						description,
+						name,
+					}) => (
+						<Link key={id} to={`/repository/${login}/${name}`}>
+							<img src={avatar_url} alt={login} />
+							<div>
+								<strong>{full_name}</strong>
+								<p>{description}</p>
+							</div>
 
-						<FiChevronRight size={17.5} />
-					</Link>
-				))}
+							<FiChevronRight size={17.5} />
+						</Link>
+					)
+				)}
 			</Repositories>
 		</>
 	)
