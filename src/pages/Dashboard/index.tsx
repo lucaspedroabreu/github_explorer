@@ -6,10 +6,10 @@ import api from '../../services/api-client'
 import { Title, Form, Repositories, Error } from './styles'
 
 import svgLogo from '../../assets/github-explorer_logo.svg'
-import { IRepository } from '../../types'
+import { IRepository, User } from '../../types'
 
 const Dashboard: React.FC = () => {
-	const [repoQuery, setQuery] = useState('')
+	const [trackingQuery, setTrackingQuery] = useState('')
 	const [inputError, setInputError] = useState('')
 
 	const [repositories, setRepositories] = useState<IRepository[]>(() => {
@@ -24,6 +24,16 @@ const Dashboard: React.FC = () => {
 		return []
 	})
 
+	const [users, setUsers] = useState<User[]>(() => {
+		const storedUsers = localStorage.getItem('@GithubExplorer:users')
+
+		if (storedUsers) {
+			return JSON.parse(storedUsers)
+		}
+
+		return []
+	})
+
 	useEffect(() => {
 		localStorage.setItem(
 			'@GithubExplorer:repositories',
@@ -31,20 +41,30 @@ const Dashboard: React.FC = () => {
 		)
 	}, [repositories])
 
-	async function handleAddRepository(
+	useEffect(() => {
+		localStorage.setItem('@GithubExplorer:users', JSON.stringify(users))
+	}, [users])
+
+	async function handleAddTracker(
 		event: FormEvent<HTMLFormElement>
 	): Promise<void> {
 		event.preventDefault()
 
-		if (!repoQuery) {
-			setInputError("Digite o 'autor/nome' do repositório.")
+		if (!trackingQuery) {
+			setInputError(
+				"Digite o nome do usuário ou 'autor/nome' do repositório."
+			)
 			return
 		}
 
 		try {
-			const githubResponse = await api.get<IRepository>(`repos/${repoQuery}`)
+			const githubResponseOne = await api.get<IRepository>(
+				`repos/${trackingQuery}`
+			)
+			const githubResponseTwo = await api.get<User>(`users/${trackingQuery}`)
 
-			const repository = githubResponse.data
+			const repository = githubResponseOne.data
+			const user = githubResponseTwo.data
 
 			setRepositories(previousRepositories => {
 				const notIncludingSearchedRepo = previousRepositories.filter(
@@ -53,11 +73,20 @@ const Dashboard: React.FC = () => {
 
 				return [...notIncludingSearchedRepo, repository]
 			})
-			setQuery('')
+
+			setUsers(previousUsers => {
+				const notIncludingSearchedUser = previousUsers.filter(
+					aUser => aUser.login !== user.login
+				)
+
+				return [...notIncludingSearchedUser, user]
+			})
+
+			setTrackingQuery('')
 			setInputError('')
 		} catch (err) {
 			setInputError(
-				"Repositório não encontrado. Digite no formato 'autor/nome'."
+				"Repositório ou Usuário não encontrado. Digite no formato 'Usuário' ou 'autor/nome'."
 			)
 		}
 	}
@@ -68,10 +97,10 @@ const Dashboard: React.FC = () => {
 				<img src={svgLogo} alt="Github Explorer" />
 			</header>
 			<Title>Explore repositórios no Github.</Title>
-			<Form hasError={!!inputError} onSubmit={handleAddRepository}>
+			<Form hasError={!!inputError} onSubmit={handleAddTracker}>
 				<input
-					value={repoQuery}
-					onChange={e => setQuery(e.target.value)}
+					value={trackingQuery}
+					onChange={e => setTrackingQuery(e.target.value)}
 					placeholder="Digite aqui..."
 				/>
 				<button type="submit">Pesquisar</button>
