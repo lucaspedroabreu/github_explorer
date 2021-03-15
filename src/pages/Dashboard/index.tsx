@@ -11,6 +11,7 @@ import { IRepository, User } from '../../types'
 const Dashboard: React.FC = () => {
 	const [trackingQuery, setTrackingQuery] = useState('')
 	const [inputError, setInputError] = useState('')
+	const [hasError, setHasError] = useState({ repository: false, user: false })
 
 	const [repositories, setRepositories] = useState<IRepository[]>(() => {
 		const storedRepositories = localStorage.getItem(
@@ -45,6 +46,48 @@ const Dashboard: React.FC = () => {
 		localStorage.setItem('@GithubExplorer:users', JSON.stringify(users))
 	}, [users])
 
+	async function setUser() {
+		try {
+			const { data: user } = await api.get<User>(`users/${trackingQuery}`)
+
+			console.log('user ', user)
+
+			setUsers(previousUsers => {
+				const notIncludingSearchedUser = previousUsers.filter(
+					aUser => aUser.login !== user.login
+				)
+
+				return [...notIncludingSearchedUser, user]
+			})
+
+			setHasError(prevErrors => ({ ...prevErrors, user: false }))
+		} catch (e) {
+			setHasError(prevErrors => ({ ...prevErrors, user: true }))
+		}
+	}
+
+	async function setRepository() {
+		try {
+			const { data: repository } = await api.get<IRepository>(
+				`repos/${trackingQuery}`
+			)
+
+			console.log('repository ', repository)
+
+			setRepositories(previousRepositories => {
+				const notIncludingSearchedRepo = previousRepositories.filter(
+					repo => repo.id !== repository.id
+				)
+
+				return [...notIncludingSearchedRepo, repository]
+			})
+
+			setHasError(prevErrors => ({ ...prevErrors, repository: false }))
+		} catch (e) {
+			setHasError(prevErrors => ({ ...prevErrors, repository: true }))
+		}
+	}
+
 	async function handleAddTracker(
 		event: FormEvent<HTMLFormElement>
 	): Promise<void> {
@@ -57,36 +100,11 @@ const Dashboard: React.FC = () => {
 			return
 		}
 
-		try {
-			const githubResponseOne = await api.get<IRepository>(
-				`repos/${trackingQuery}`
-			)
-			const githubResponseTwo = await api.get<User>(`users/${trackingQuery}`)
+		await Promise.all([setRepository(), setUser()])
 
-			const repository = githubResponseOne.data
-			const user = githubResponseTwo.data
-
-			setRepositories(previousRepositories => {
-				const notIncludingSearchedRepo = previousRepositories.filter(
-					repo => repo.id !== repository.id
-				)
-
-				return [...notIncludingSearchedRepo, repository]
-			})
-
-			setUsers(previousUsers => {
-				const notIncludingSearchedUser = previousUsers.filter(
-					aUser => aUser.login !== user.login
-				)
-
-				return [...notIncludingSearchedUser, user]
-			})
-
-			setTrackingQuery('')
-			setInputError('')
-		} catch (err) {
+		if (hasError.repository && hasError.user) {
 			setInputError(
-				"Repositório ou Usuário não encontrado. Digite no formato 'Usuário' ou 'autor/nome'."
+				"Digite o nome do usuário ou 'autor/nome' do repositório."
 			)
 		}
 	}
