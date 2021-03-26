@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { useRouteMatch, Link } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 import { VscIssues } from 'react-icons/vsc'
 import { CgGitFork } from 'react-icons/cg'
 import { RiStarSFill } from 'react-icons/ri'
-
 import api from '../../services/api-client'
 import { Header, RepositoryInfo, Issues } from './styles'
 
@@ -26,22 +25,30 @@ interface Issue {
 }
 
 const Repository: React.FC = () => {
-	const [repository, setRepository] = useState<IRepository | null>(null)
+	const { state } = useLocation<IRepository | undefined>()
+	const [repository, setRepository] = useState<IRepository | undefined>(state)
 	const [issues, setIssues] = useState<Issue[]>([])
+	const params = useParams<RepositoryParams>()
 
-	const { params } = useRouteMatch<RepositoryParams>()
+	console.log('params ', params)
+
+	console.log('repository ', repository)
 
 	useEffect(() => {
-		api.get(`repos/${params.user}/${params.repository}`).then(response => {
-			setRepository(response.data)
-		})
+		if (!repository) {
+			api.get(`repos/${params.user}/${params.repository}`).then(response => {
+				setRepository(response.data)
+			})
+		}
+	}, [params.user, params.repository])
 
+	useEffect(() => {
 		api.get(`repos/${params.user}/${params.repository}/issues`).then(
 			response => {
 				setIssues(response.data)
 			}
 		)
-	}, [params.repository, params.user])
+	}, [params.user, params.repository])
 
 	return (
 		<>
@@ -94,7 +101,12 @@ const Repository: React.FC = () => {
 
 			<Issues>
 				{issues.map(issue => (
-					<a key={issue.id} href={issue.html_url}>
+					<a
+						key={issue.id}
+						href={issue.html_url}
+						rel="noreferrer"
+						target="_blank"
+					>
 						<div>
 							<strong>{issue.title}</strong>
 							<p>{issue.user.login}</p>

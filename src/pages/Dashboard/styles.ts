@@ -59,18 +59,23 @@ export const Error = styled.span`
 	margin: 8px 0 0 20px;
 `
 
+export const SubTitle = styled.h2`
+	font-weight: bold;
+	font-size: 32px;
+	color: #3a3a3a;
+	margin: 40px 0 10px;
+`
+
 export const Repositories = styled.div`
 	a {
-		height: 112px;
 		display: flex;
 		align-content: center;
 		align-items: center;
 		text-decoration: none;
 		background: #fff;
-		width: 714px;
-		margin-top: 120px;
-		padding: 14.1px;
+		padding: 14px;
 		transition: transform 0.2s;
+		color: #3a3a3a;
 
 		&:hover {
 			transform: translateX(10px);
@@ -81,9 +86,9 @@ export const Repositories = styled.div`
 		}
 
 		img {
-			height: 83.81px;
+			height: 82px;
 			border-radius: 50%;
-			margin-right: 22.1px;
+			margin-right: 22px;
 		}
 
 		div {
@@ -92,14 +97,14 @@ export const Repositories = styled.div`
 
 			strong {
 				font-size: 24px;
-				line-height: 28.13px;
+				line-height: 28px;
 				color: #3a3a3a;
 				font-weight: bold;
 			}
 
 			p {
 				font-size: 18px;
-				line-height: 21.09px;
+				line-height: 21px;
 				margin-top: 4px;
 				color: #a8a8b3;
 			}
@@ -111,3 +116,5 @@ export const Repositories = styled.div`
 		}
 	}
 `
+
+export const Users = Repositories

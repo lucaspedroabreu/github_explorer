@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { GoRepo } from 'react-icons/go'
 
 export const Header = styled.header`
 	display: flex;
@@ -121,28 +122,39 @@ export const Repositories = styled.div`
 			margin-right: 22.1px;
 		}
 
-		div {
-			margin-right: 16px;
-			flex: 1;
-
-			strong {
-				font-size: 24px;
-				line-height: 28.13px;
-				color: #3a3a3a;
-				font-weight: bold;
-			}
-
-			p {
-				font-size: 18px;
-				line-height: 21.09px;
-				margin-top: 4px;
-				color: #a8a8b3;
-			}
-		}
-
 		svg {
 			margin-left: auto;
 			color: #c9c9d4;
 		}
 	}
+`
+
+export const RepoInfoWrapper = styled.div`
+	margin-right: 16px;
+	display: flex;
+	flex-direction: column;
+	align-items: start;
+
+	strong {
+		font-size: 24px;
+		line-height: 28.13px;
+		color: #3a3a3a;
+		font-weight: bold;
+	}
+
+	p {
+		font-size: 18px;
+		line-height: 21.09px;
+		margin-top: 4px;
+		color: #a8a8b3;
+	}
+`
+
+export const RepoNameWrapper = styled.div`
+	display: flex;
+	align-items: center;
+`
+
+export const BookIcon = styled(GoRepo)`
+	margin-right: 8px;
 `

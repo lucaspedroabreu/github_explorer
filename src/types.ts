@@ -12,7 +12,8 @@ export interface IRepository {
 	}
 }
 
-export interface User {
+export interface IUser {
+	id: number
 	login: string
 	avatar_url: string
 	name: string

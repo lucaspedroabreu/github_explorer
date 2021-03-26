@@ -8,7 +8,7 @@ import User from '../pages/User'
 const Routes: React.FC = () => (
 	<Switch>
 		<Route path="/" exact component={Dashboard} />
-		<Route path="/:user/" exact component={User} />
+		<Route path="/user/:user/" exact component={User} />
 		<Route
 			path="/repository/:user/:repository"
 			exact

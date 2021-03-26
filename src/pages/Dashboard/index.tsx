@@ -2,11 +2,10 @@ import React, { useState, useEffect, FormEvent } from 'react'
 import { FiChevronRight } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import api from '../../services/api-client'
-
-import { Title, Form, Repositories, Error } from './styles'
-
+import { Title, Form, Repositories, Error, SubTitle, Users } from './styles'
 import svgLogo from '../../assets/github-explorer_logo.svg'
-import { IRepository, User } from '../../types'
+import { IRepository, IUser } from '../../types'
+import parseUser from '../../selectors/users'
 
 const Dashboard: React.FC = () => {
 	const [trackingQuery, setTrackingQuery] = useState('')
@@ -25,7 +24,7 @@ const Dashboard: React.FC = () => {
 		return []
 	})
 
-	const [users, setUsers] = useState<User[]>(() => {
+	const [users, setUsers] = useState<IUser[]>(() => {
 		const storedUsers = localStorage.getItem('@GithubExplorer:users')
 
 		if (storedUsers) {
@@ -46,9 +45,9 @@ const Dashboard: React.FC = () => {
 		localStorage.setItem('@GithubExplorer:users', JSON.stringify(users))
 	}, [users])
 
-	async function setUser() {
+	async function fetchUser() {
 		try {
-			const { data: user } = await api.get<User>(`users/${trackingQuery}`)
+			const { data: user } = await api.get<IUser>(`users/${trackingQuery}`)
 
 			console.log('user ', user)
 
@@ -57,7 +56,7 @@ const Dashboard: React.FC = () => {
 					aUser => aUser.login !== user.login
 				)
 
-				return [...notIncludingSearchedUser, user]
+				return [...notIncludingSearchedUser, parseUser(user)]
 			})
 
 			setHasError(prevErrors => ({ ...prevErrors, user: false }))
@@ -66,7 +65,7 @@ const Dashboard: React.FC = () => {
 		}
 	}
 
-	async function setRepository() {
+	async function fetchRepository() {
 		try {
 			const { data: repository } = await api.get<IRepository>(
 				`repos/${trackingQuery}`
@@ -100,7 +99,7 @@ const Dashboard: React.FC = () => {
 			return
 		}
 
-		await Promise.all([setRepository(), setUser()])
+		await Promise.all([fetchRepository(), fetchUser()])
 
 		if (hasError.repository && hasError.user) {
 			setInputError(
@@ -127,26 +126,48 @@ const Dashboard: React.FC = () => {
 			{inputError && <Error>{inputError}</Error>}
 
 			<Repositories>
-				{repositories.map(
-					({
-						id,
-						full_name,
-						owner: { login, avatar_url },
-						description,
-						name,
-					}) => (
-						<Link key={id} to={`/repository/${login}/${name}`}>
-							<img src={avatar_url} alt={login} />
-							<div>
-								<strong>{full_name}</strong>
-								<p>{description}</p>
-							</div>
+				{repositories.length > 0 && <SubTitle>Repositórios</SubTitle>}
+				{repositories.map(repository => (
+					<Link
+						key={repository.id}
+						to={{
+							pathname: `/repository/${repository.owner.login}/${repository.name}`,
+							state: repository,
+						}}
+					>
+						<img
+							src={repository.owner.avatar_url}
+							alt={repository.owner.login}
+						/>
+						<div>
+							<strong>{repository.full_name}</strong>
+							<p>{repository.description}</p>
+						</div>
 
-							<FiChevronRight size={17.5} />
-						</Link>
-					)
-				)}
+						<FiChevronRight size={17.5} />
+					</Link>
+				))}
 			</Repositories>
+
+			{users.length > 0 && <SubTitle>Usuários</SubTitle>}
+			<Users>
+				{users.map(user => (
+					<Link
+						key={user.id}
+						to={{ pathname: `/user/${user.login}`, state: user }}
+					>
+						<img src={user.avatar_url} alt={user.login} />
+						<div>
+							<div>
+								<strong>{user.name}</strong>
+							</div>
+							<h4>{user.login}</h4>
+							<p>{user.bio}</p>
+						</div>
+						<FiChevronRight size={17.5} />
+					</Link>
+				))}
+			</Users>
 		</>
 	)
 }
